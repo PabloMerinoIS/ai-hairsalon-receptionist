@@ -1,0 +1,16 @@
+# Configuración para publicar en Render (render.com). Las claves NO van aquí: se escriben en el panel de Render.
+services:
+  - type: web
+    name: cita24-demo
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # Un solo proceso: las conversaciones viven en memoria y deben estar todas en el mismo
+    startCommand: gunicorn app:app --workers 1 --threads 8 --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ADMIN_KEY
+        sync: false

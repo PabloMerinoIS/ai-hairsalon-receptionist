@@ -1,0 +1,26 @@
+{
+  "nombre": "Estilo Luna (ejemplo)",
+  "direccion": "Calle del Sol 5, Valladolid",
+  "telefono": "600 000 000",
+  "color": "#7a5c22",
+  "profesionales": ["Luna", "Mario", "Irene"],
+  "horario": {
+    "lunes": [],
+    "martes": [["10:00", "14:00"], ["16:30", "20:00"]],
+    "miercoles": [["10:00", "14:00"], ["16:30", "20:00"]],
+    "jueves": [["10:00", "14:00"], ["16:30", "20:00"]],
+    "viernes": [["10:00", "14:00"], ["16:30", "20:00"]],
+    "sabado": [["10:00", "14:00"]],
+    "domingo": []
+  },
+  "servicios": [
+    {"id": "corte_mujer", "nombre": "Corte de mujer", "duracion_min": 60, "precio": 28},
+    {"id": "corte_hombre", "nombre": "Corte de hombre", "duracion_min": 30, "precio": 15},
+    {"id": "tinte", "nombre": "Tinte completo", "duracion_min": 120, "precio": 48},
+    {"id": "peinado", "nombre": "Lavado y peinado", "duracion_min": 45, "precio": 19}
+  ],
+  "faq": [
+    {"p": "¿Se puede pagar con tarjeta?", "r": "Sí, aceptamos tarjeta, efectivo y Bizum."},
+    {"p": "¿Cómo se cancela una cita?", "r": "Avisando con al menos 4 horas de antelación. Sin coste."}
+  ]
+}

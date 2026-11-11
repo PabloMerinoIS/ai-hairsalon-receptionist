@@ -1,0 +1,32 @@
+{
+  "nombre": "Peluquería Estilo Nuria",
+  "direccion": "Calle Mayor 12, Madrid",
+  "telefono": "600 123 456",
+  "profesionales": ["Nuria", "Carlos"],
+  "horario": {
+    "lunes": [],
+    "martes": [["09:30", "14:00"], ["16:30", "20:00"]],
+    "miercoles": [["09:30", "14:00"], ["16:30", "20:00"]],
+    "jueves": [["09:30", "14:00"], ["16:30", "20:00"]],
+    "viernes": [["09:30", "14:00"], ["16:30", "20:00"]],
+    "sabado": [["09:30", "14:00"]],
+    "domingo": []
+  },
+  "servicios": [
+    {"id": "corte_mujer", "nombre": "Corte de mujer", "duracion_min": 60, "precio": 25},
+    {"id": "corte_hombre", "nombre": "Corte de hombre", "duracion_min": 30, "precio": 14},
+    {"id": "corte_nino", "nombre": "Corte infantil (hasta 12 años)", "duracion_min": 30, "precio": 10},
+    {"id": "tinte", "nombre": "Tinte completo", "duracion_min": 120, "precio": 45},
+    {"id": "mechas", "nombre": "Mechas", "duracion_min": 150, "precio": 70},
+    {"id": "peinado", "nombre": "Lavado y peinado", "duracion_min": 45, "precio": 18},
+    {"id": "barba", "nombre": "Arreglo de barba", "duracion_min": 30, "precio": 8}
+  ],
+  "faq": [
+    {"p": "¿Se puede pagar con tarjeta?", "r": "Sí, aceptamos tarjeta, efectivo y Bizum."},
+    {"p": "¿Hay que reservar cita?", "r": "Recomendamos reservar, pero si hay hueco atendemos sin cita."},
+    {"p": "¿Cómo se cancela una cita?", "r": "Avisando con al menos 4 horas de antelación, por aquí o por teléfono. Sin coste."},
+    {"p": "¿Qué pasa si llego tarde?", "r": "Esperamos hasta 10 minutos. Pasado ese tiempo, puede que haya que reajustar el servicio o cambiar la cita."},
+    {"p": "¿Usáis productos sin amoniaco?", "r": "Sí, trabajamos con tintes sin amoniaco. Pregunta por las opciones en tu cita."},
+    {"p": "¿Hay parking cerca?", "r": "Hay un parking público a 100 metros, en la Plaza del Ayuntamiento."}
+  ]
+}

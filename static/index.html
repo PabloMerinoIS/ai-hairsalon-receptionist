@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cita24 · Recepcionista con IA para peluquerías</title>
+<meta name="description" content="Un asistente con IA que responde a tus clientes y reserva citas por ti, las 24 horas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf6f1;
+    --surface: #ffffff;
+    --ink: #2b2320;
+    --muted: #6f625b;
+    --line: #eadfd3;
+    --accent: #b4573b;
+    --accent-dark: #8f432c;
+    --accent-soft: #f6e4dc;
+    --bot: #f1e9df;
+    --ok: #3f8f5f;
+    --radius: 18px;
+    --shadow: 0 24px 60px -24px rgba(90, 50, 30, .35);
+    --serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: var(--sans); color: var(--ink); background: var(--bg); line-height: 1.55; }
+  a { color: inherit; }
+  .wrap { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 22px; }
+
+  /* ---------- navegación ---------- */
+  nav { position: sticky; top: 0; z-index: 20; background: rgba(250, 246, 241, .9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { font-family: var(--serif); font-weight: 700; font-size: 22px; text-decoration: none; letter-spacing: -.01em; }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 26px; align-items: center; font-size: 15px; }
+  .nav-links a { text-decoration: none; color: var(--muted); }
+  .nav-links a:hover { color: var(--ink); }
+  .btn { display: inline-block; background: var(--accent); color: #fff !important; padding: 12px 22px; border-radius: 999px; font-weight: 500; text-decoration: none; border: 0; cursor: pointer; font-size: 15px; font-family: inherit; transition: background .15s, transform .15s; }
+  .btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+  .btn.ghost { background: transparent; color: var(--ink) !important; border: 1.5px solid var(--line); }
+  .btn.ghost:hover { background: var(--surface); border-color: var(--accent); }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 64px 0 80px; }
+  .hero .wrap { display: grid; grid-template-columns: 1.05fr .95fr; grid-template-areas: "texto chat" "agenda chat"; column-gap: 56px; row-gap: 28px; align-items: center; }
+  .hero-texto { grid-area: texto; }
+  .hero .phone { grid-area: chat; }
+  .agenda-demo { grid-area: agenda; }
+  .tag { display: inline-flex; align-items: center; gap: 8px; background: var(--accent-soft); color: var(--accent-dark); padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; }
+  .tag i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; }
+  h1 { font-family: var(--serif); font-size: clamp(38px, 5.2vw, 58px); line-height: 1.06; letter-spacing: -.02em; margin: 18px 0 18px; font-weight: 700; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .lead { font-size: 19px; color: var(--muted); max-width: 520px; margin: 0 0 28px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* ---------- agenda de la demo ---------- */
+  .agenda-demo { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px 14px; max-width: 520px; width: 100%; }
+  .agenda-demo header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .agenda-demo h2 { font-family: var(--sans); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 700; }
+  .agenda-demo header small { color: var(--muted); font-size: 12px; }
+  #agendaLista { max-height: 168px; overflow-y: auto; display: grid; gap: 8px; }
+  .agenda-vacia { color: var(--muted); font-size: 14.5px; margin: 4px 0 6px; }
+  .agenda-dia { font-size: 12.5px; font-weight: 700; color: var(--accent-dark); margin: 4px 0 -2px; }
+  .cita-demo { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; background: var(--bg); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; padding: 9px 12px; }
+  .cita-demo b.hora { font-size: 16px; }
+  .cita-demo .det { font-size: 14px; line-height: 1.3; }
+  .cita-demo .det small { display: block; color: var(--muted); font-size: 12.5px; }
+  .cita-demo.nueva { animation: destello 2.4s ease-out; }
+  @keyframes destello { 0% { background: #fff3c4; transform: scale(1.02); } 100% { background: var(--bg); transform: none; } }
+
+  /* ---------- demo de chat ---------- */
+  .phone { background: var(--surface); border-radius: 26px; box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; height: 560px; max-width: 420px; width: 100%; margin-left: auto; }
+  .phone-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--accent); color: #fff; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.22); display: grid; place-items: center; font-family: var(--serif); font-weight: 700; font-size: 18px; }
+  .phone-head b { display: block; font-size: 15px; line-height: 1.2; }
+  .phone-head small { font-size: 12px; opacity: .85; display: flex; align-items: center; gap: 6px; }
+  .phone-head small i { width: 7px; height: 7px; border-radius: 50%; background: #8df0b0; display: inline-block; }
+  #chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: #fffdfb; }
+  .msg { max-width: 84%; padding: 10px 14px; border-radius: 16px; font-size: 15px; white-space: pre-wrap; word-wrap: break-word; animation: pop .18s ease-out; }
+  .msg.bot { background: var(--bot); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .msg.user { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .dots { display: inline-flex; gap: 4px; padding: 4px 0; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: #a89b92; animation: blink 1.2s infinite; }
+  .dots i:nth-child(2) { animation-delay: .2s; }
+  .dots i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 12px; background: #fffdfb; }
+  .chip { border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 13px; font-size: 13.5px; cursor: pointer; font-family: inherit; color: var(--ink); transition: border-color .15s, background .15s; }
+  .chip:hover { border-color: var(--accent); background: var(--accent-soft); }
+  #form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); background: var(--surface); }
+  #texto { flex: 1; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 999px; font-size: 15px; font-family: inherit; outline: none; min-width: 0; }
+  #texto:focus { border-color: var(--accent); }
+  #enviar { background: var(--accent); color: #fff; border: 0; border-radius: 999px; width: 46px; height: 46px; cursor: pointer; font-size: 18px; flex: none; }
+  #enviar:disabled { opacity: .45; cursor: default; }
+  .aviso-ia { text-align: center; font-size: 11.5px; color: var(--muted); padding: 0 12px 10px; background: var(--surface); }
+
+  /* ---------- secciones ---------- */
+  section { padding: 80px 0; }
+  section.alt { background: var(--surface); border-block: 1px solid var(--line); }
+  .kicker { color: var(--accent); font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+  h2 { font-family: var(--serif); font-size: clamp(30px, 4vw, 42px); line-height: 1.1; letter-spacing: -.015em; margin: 10px 0 14px; }
+  .sub { color: var(--muted); font-size: 18px; max-width: 620px; margin: 0 0 44px; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; counter-reset: paso; }
+  .step { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; counter-increment: paso; }
+  .step::before { content: counter(paso); font-family: var(--serif); font-size: 44px; font-weight: 700; color: var(--accent); display: block; line-height: 1; margin-bottom: 14px; }
+  .step h3 { margin: 0 0 8px; font-size: 19px; }
+  .step p { margin: 0; color: var(--muted); }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .feature { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+  .feature .ico { width: 42px; height: 42px; border-radius: 12px; background: var(--accent-soft); display: grid; place-items: center; font-size: 20px; margin-bottom: 14px; }
+  .feature h3 { margin: 0 0 6px; font-size: 17px; }
+  .feature p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .plans { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; max-width: 820px; }
+  .plan { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 32px; position: relative; }
+  .plan.pop { border: 2px solid var(--accent); background: var(--surface); box-shadow: var(--shadow); }
+  .plan .badge { position: absolute; top: -13px; left: 28px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+  .plan h3 { margin: 0; font-size: 20px; }
+  .price { font-family: var(--serif); font-size: 46px; font-weight: 700; margin: 10px 0 2px; letter-spacing: -.02em; }
+  .price small { font-family: var(--sans); font-size: 15px; font-weight: 400; color: var(--muted); }
+  .plan ul { list-style: none; padding: 0; margin: 22px 0 26px; display: grid; gap: 10px; }
+  .plan li { padding-left: 26px; position: relative; font-size: 15px; }
+  .plan li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: 700; }
+  .nota { color: var(--muted); font-size: 13px; margin-top: 18px; }
+
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; margin-bottom: 10px; max-width: 760px; }
+  summary { cursor: pointer; font-weight: 500; }
+  details p { margin: 10px 0 0; color: var(--muted); }
+
+  .final { text-align: center; }
+  .final h2 { max-width: 700px; margin-inline: auto; }
+  .final .sub { margin-inline: auto; }
+
+  footer { padding: 36px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  /* ---------- móvil ---------- */
+  @media (max-width: 880px) {
+    .hero { padding: 36px 0 56px; }
+    .hero .wrap { grid-template-columns: 1fr; grid-template-areas: "texto" "chat" "agenda"; row-gap: 32px; }
+    .agenda-demo { margin: 0 auto; }
+    .phone { margin: 0 auto; height: 540px; }
+    .steps, .features, .plans { grid-template-columns: 1fr; }
+    .nav-links a:not(.btn) { display: none; }
+    section { padding: 56px 0; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#">Cita<span>24</span></a>
+    <div class="nav-links">
+      <a href="#como">Cómo funciona</a>
+      <a href="#funciones">Funciones</a>
+      <a href="#precios">Precios</a>
+      <a href="#faq">Preguntas</a>
+      <a class="btn" href="#demo" id="navDemo">Probar la demo</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="demo">
+  <div class="wrap">
+    <div class="hero-texto">
+      <span class="tag"><i></i> Atiende ahora mismo, mientras tú trabajas</span>
+      <h1>Tu peluquería <em>nunca pierde</em> una cita</h1>
+      <p class="lead">Un asistente con inteligencia artificial que contesta a tus clientes y reserva las citas por ti, a cualquier hora, sin que tengas que soltar las tijeras.</p>
+      <div class="cta">
+        <a class="btn" href="#demo" id="probar">Hablar con la demo →</a>
+        <a class="btn ghost" href="#precios">Ver precios</a>
+      </div>
+    </div>
+
+    <!-- Demo real: habla con el servidor -->
+    <div class="phone" aria-label="Demo del asistente">
+      <div class="phone-head">
+        <div class="avatar" id="inicialAvatar">E</div>
+        <div><b id="titulo">Peluquería Estilo Nuria</b><small><i></i> Asistente virtual · IA</small></div>
+      </div>
+      <div id="chat"></div>
+      <div class="chips" id="chips">
+        <button class="chip" type="button">Quiero una cita para mañana</button>
+        <button class="chip" type="button">¿Cuánto cuesta un tinte?</button>
+        <button class="chip" type="button">¿Se puede pagar con tarjeta?</button>
+      </div>
+      <form id="form">
+        <input id="texto" placeholder="Escribe como lo haría un cliente…" autocomplete="off" maxlength="500">
+        <button id="enviar" aria-label="Enviar">➤</button>
+      </form>
+      <div class="aviso-ia">Esto es una demo con una peluquería de ejemplo. Estás hablando con una IA.</div>
+    </div>
+
+    <!-- Lo que vería la peluquería: solo muestra las citas de esta conversación -->
+    <div class="agenda-demo" aria-live="polite">
+      <header><h2>Lo que ve tu peluquería</h2><small>Agenda de ejemplo</small></header>
+      <div id="agendaLista"><p class="agenda-vacia">Aún no hay citas. Reserva una en el chat y aparecerá aquí al instante.</p></div>
+    </div>
+  </div>
+</header>
+
+<section class="alt" id="como">
+  <div class="wrap">
+    <div class="kicker">Cómo funciona</div>
+    <h2>Listo en un día, sin instalar nada</h2>
+    <p class="sub">Tú nos cuentas cómo funciona tu negocio. Nosotros lo dejamos atendiendo a tus clientes.</p>
+    <div class="steps">
+      <div class="step"><h3>Nos cuentas tu negocio</h3><p>Horarios, servicios, precios y las preguntas que más te hacen. Con eso el asistente aprende a hablar como tu equipo.</p></div>
+      <div class="step"><h3>Lo conectamos a tu agenda</h3><p>Ve tus huecos reales y reserva solo cuando hay sitio. Nada de citas solapadas ni confusiones.</p></div>
+      <div class="step"><h3>Lo pones en tu web o WhatsApp</h3><p>Tus clientes escriben y obtienen respuesta al instante. Tú solo ves la agenda llenarse.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="funciones">
+  <div class="wrap">
+    <div class="kicker">Qué hace</div>
+    <h2>Lo que harías tú, sin quitarte tiempo</h2>
+    <p class="sub">Pensado para negocios pequeños donde el teléfono suena justo cuando tienes las manos ocupadas.</p>
+    <div class="features">
+      <div class="feature"><div class="ico">💬</div><h3>Responde dudas</h3><p>Precios, horarios, métodos de pago, cómo llegar… siempre con la información real de tu negocio.</p></div>
+      <div class="feature"><div class="ico">📅</div><h3>Reserva citas de verdad</h3><p>Consulta la agenda, propone horas libres y confirma con un código de reserva.</p></div>
+      <div class="feature"><div class="ico">🔁</div><h3>Cancela y reprograma</h3><p>Tus clientes cambian su cita solos, respetando tu política de cancelación.</p></div>
+      <div class="feature"><div class="ico">🕒</div><h3>Nunca descansa</h3><p>Atiende de noche, en festivos y mientras estás con otro cliente.</p></div>
+      <div class="feature"><div class="ico">🧠</div><h3>No se inventa nada</h3><p>Si no sabe algo, lo dice y deriva al cliente a tu teléfono. Sin promesas que no puedes cumplir.</p></div>
+      <div class="feature"><div class="ico">🔒</div><h3>Transparente</h3><p>Siempre avisa de que es un asistente de IA y cuida los datos de tus clientes.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="precios">
+  <div class="wrap">
+    <div class="kicker">Precios</div>
+    <h2>Menos de lo que cuesta una cita perdida al mes</h2>
+    <p class="sub">Sin permanencia. Si no te compensa, te vas.</p>
+    <div class="plans">
+      <div class="plan">
+        <h3>Esencial</h3>
+        <div class="price">49 €<small> /mes</small></div>
+        <ul>
+          <li>Asistente en tu página web</li>
+          <li>Respuestas a dudas frecuentes</li>
+          <li>Reservas y cancelaciones</li>
+          <li>Configuración inicial incluida</li>
+        </ul>
+        <a class="btn ghost" href="#demo">Probar la demo</a>
+      </div>
+      <div class="plan pop">
+        <span class="badge">Más elegido</span>
+        <h3>Completo</h3>
+        <div class="price">99 €<small> /mes</small></div>
+        <ul>
+          <li>Todo lo de Esencial</li>
+          <li>Conexión con Google Calendar</li>
+          <li>Atención por WhatsApp</li>
+          <li>Recordatorios de cita a tus clientes</li>
+        </ul>
+        <a class="btn" href="#demo">Probar la demo</a>
+      </div>
+    </div>
+    <p class="nota">Precios de ejemplo para esta maqueta; ajústalos a tu propuesta real.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="kicker">Preguntas</div>
+    <h2>Lo que suelen preguntar</h2>
+    <p class="sub"></p>
+    <details><summary>¿Mis clientes sabrán que hablan con una IA?</summary><p>Sí. El asistente lo dice desde el primer mensaje. Es más honesto y, en la práctica, a la gente le da igual si le resuelve la cita en dos minutos.</p></details>
+    <details><summary>¿Y si le preguntan algo que no sabe?</summary><p>No improvisa: reconoce que no lo sabe y les da el teléfono de tu negocio. Nunca inventa precios ni horarios.</p></details>
+    <details><summary>¿Qué pasa con los datos de mis clientes?</summary><p>Solo se guardan el nombre y el teléfono necesarios para la cita, con su aviso de privacidad correspondiente.</p></details>
+    <details><summary>¿Sirve para otros negocios además de peluquerías?</summary><p>Sí: clínicas, talleres, centros de estética, restaurantes… Cambia la información del negocio y el asistente se adapta.</p></details>
+  </div>
+</section>
+
+<section class="alt final">
+  <div class="wrap">
+    <h2>Pruébalo tú mismo, ahora</h2>
+    <p class="sub">Escríbele como lo haría un cliente. Tarda menos de un minuto en verse.</p>
+    <a class="btn" href="#demo" id="probar2">Hablar con la demo →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© Cita24 · Maqueta de demostración</span>
+    <span>Asistente con IA · Tus datos, solo para gestionar tus citas</span>
+  </div>
+</footer>
+
+<script>
+  const chat = document.getElementById('chat');
+  const form = document.getElementById('form');
+  const texto = document.getElementById('texto');
+  const enviar = document.getElementById('enviar');
+  const chips = document.getElementById('chips');
+  let sesion = null;
+  let ocupado = false;
+  // Enlace personalizado: /?n=nombre-de-la-peluqueria carga los datos de esa peluquería
+  const negocioSlug = new URLSearchParams(location.search).get('n') || '';
+
+  // En un enlace personalizado para una peluquería no se enseñan los precios de Cita24 (son solo de ejemplo)
+  if (negocioSlug) {
+    document.getElementById('precios').remove();
+    document.querySelectorAll('a[href="#precios"]').forEach(a => a.remove());
+    // Preguntas de ejemplo que valen para cualquier peluquería (no dependen de servicios ni precios concretos)
+    const ejemplos = ['Quiero una cita para mañana', '¿Qué servicios hacéis?', '¿Dónde estáis y qué horario tenéis?'];
+    document.querySelectorAll('#chips .chip').forEach((c, i) => { c.textContent = ejemplos[i]; });
+  }
+
+  function pinta(clase, contenido) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + clase;
+    d.textContent = contenido;
+    chat.appendChild(d);
+    chat.scrollTop = chat.scrollHeight;
+    return d;
+  }
+
+  function pintaEscribiendo() {
+    const d = document.createElement('div');
+    d.className = 'msg bot';
+    d.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>';
+    chat.appendChild(d);
+    chat.scrollTop = chat.scrollHeight;
+    return d;
+  }
+
+  async function manda(mensaje) {
+    if (ocupado) return;
+    ocupado = true;
+    enviar.disabled = true;
+    chips.style.display = 'none';
+    pinta('user', mensaje);
+    const espera = pintaEscribiendo();
+    try {
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({mensaje, sesion, negocio: negocioSlug})
+      });
+      const datos = await r.json().catch(() => ({}));
+      espera.remove();
+      if (r.status === 429) {
+        pinta('bot', 'Has llegado al límite de mensajes de esta demo. Vuelve a intentarlo más tarde.');
+      } else if (datos.error) {
+        pinta('bot', 'Vaya, algo ha fallado. Inténtalo de nuevo en un momento.');
+        console.error(datos.error);
+      } else {
+        sesion = datos.sesion;
+        pinta('bot', datos.respuesta);
+        cargaAgenda();
+      }
+    } catch (e) {
+      espera.remove();
+      pinta('bot', 'No he podido conectar con el servidor. ¿Está arrancado?');
+    }
+    ocupado = false;
+    enviar.disabled = false;
+    texto.focus({preventScroll: true});
+  }
+
+  // ---- Agenda de la demo: solo las citas hechas en esta conversación ----
+  const lista = document.getElementById('agendaLista');
+  const vistas = new Set();
+  const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+  function etiquetaDia(fecha) {
+    const [a, m, d] = fecha.split('-').map(Number);
+    const dt = new Date(a, m - 1, d);
+    return DIAS[dt.getDay()] + ' ' + d + ' ' + MESES[m - 1];
+  }
+
+  async function cargaAgenda() {
+    if (!sesion) return;
+    try {
+      const r = await fetch('/api/mi-agenda?sesion=' + encodeURIComponent(sesion) + (negocioSlug ? '&n=' + encodeURIComponent(negocioSlug) : ''));
+      const citas = await r.json();
+      lista.replaceChildren();
+      if (!citas.length) {
+        const p = document.createElement('p');
+        p.className = 'agenda-vacia';
+        p.textContent = 'Aún no hay citas. Reserva una en el chat y aparecerá aquí al instante.';
+        lista.appendChild(p);
+        return;
+      }
+      let diaActual = null, ultima = null;
+      citas.forEach(c => {
+        if (c.fecha !== diaActual) {
+          diaActual = c.fecha;
+          const h = document.createElement('div');
+          h.className = 'agenda-dia';
+          h.textContent = etiquetaDia(c.fecha);
+          lista.appendChild(h);
+        }
+        const el = document.createElement('div');
+        el.className = 'cita-demo' + (vistas.has(c.id) ? '' : ' nueva');
+        const hora = document.createElement('b');
+        hora.className = 'hora';
+        hora.textContent = c.inicio.slice(11, 16);
+        const det = document.createElement('div');
+        det.className = 'det';
+        det.textContent = c.nombre;
+        const peq = document.createElement('small');
+        peq.textContent = c.servicio + (typeof c.precio === 'number' ? ' · ' + c.precio + ' €' : '');
+        det.appendChild(peq);
+        el.append(hora, det);
+        lista.appendChild(el);
+        if (!vistas.has(c.id)) ultima = el;
+        vistas.add(c.id);
+      });
+      if (ultima) ultima.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+    } catch (e) { /* si falla, la agenda se queda como estaba */ }
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const m = texto.value.trim();
+    if (!m) return;
+    texto.value = '';
+    manda(m);
+  });
+
+  chips.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => manda(c.textContent)));
+
+  // Saludo local (no gasta API). El asistente se presenta como IA en su primera respuesta.
+  pinta('bot', '¡Hola! 👋 Soy el asistente virtual de la peluquería. ¿En qué te puedo ayudar?');
+
+  fetch('/api/negocio' + (negocioSlug ? '?n=' + encodeURIComponent(negocioSlug) : '')).then(r => r.json()).then(n => {
+    if (n.nombre) {
+      document.getElementById('titulo').textContent = n.nombre;
+      document.getElementById('inicialAvatar').textContent = n.nombre.trim().charAt(0).toUpperCase();
+      if (negocioSlug) document.title = n.nombre + ' · Recepcionista con IA';
+    }
+  }).catch(() => {});
+
+  // Los botones "probar" llevan al chat y enfocan la caja de texto
+  ['probar', 'probar2', 'navDemo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', () => setTimeout(() => texto.focus({preventScroll: true}), 500));
+  });
+</script>
+</body>
+</html>

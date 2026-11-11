@@ -1,0 +1,14 @@
+# Entorno virtual y caché de Python
+venv/
+__pycache__/
+*.pyc
+
+# Datos de clientes: nunca a GitHub
+citas.json
+
+# Claves y configuración local
+.env
+*.key
+
+# Mac
+.DS_Store

@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Agenda · Panel de citas</title>
+<style>
+  :root {
+    --bg: #faf6f1; --surface: #ffffff; --ink: #2b2320; --muted: #6f625b; --line: #eadfd3;
+    --accent: #b4573b; --accent-dark: #8f432c; --accent-soft: #f6e4dc; --ok: #3f8f5f; --danger: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); line-height: 1.5; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px 60px; }
+
+  header { position: sticky; top: 0; z-index: 10; background: var(--bg); padding: 16px 0 10px; border-bottom: 1px solid var(--line); }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  h1 { margin: 0; font-size: 20px; line-height: 1.2; }
+  h1 small { display: block; font-size: 12.5px; font-weight: 400; color: var(--muted); }
+  .acciones { display: flex; gap: 8px; }
+  button { font-family: inherit; cursor: pointer; }
+  .btn { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 10px 16px; font-size: 14px; font-weight: 600; }
+  .btn:hover { background: var(--accent-dark); }
+  .btn.sec { background: var(--surface); color: var(--ink); border: 1.5px solid var(--line); font-weight: 500; }
+  .btn.sec:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  .semana-nav { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 8px; font-size: 14px; color: var(--muted); }
+  .flecha { background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px; width: 34px; height: 34px; font-size: 16px; }
+  .flecha:hover { border-color: var(--accent); }
+  .dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .dia { position: relative; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 8px 0 7px; text-align: center; }
+  .dia:hover { border-color: var(--accent); }
+  .dia span { display: block; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .dia b { display: block; font-size: 18px; line-height: 1.25; }
+  .dia em { display: inline-block; font-style: normal; min-width: 20px; font-size: 11.5px; font-weight: 700; padding: 0 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-dark); margin-top: 2px; }
+  .dia em.vacio { background: transparent; color: #c2b7ae; font-weight: 400; }
+  .dia.sel { background: var(--accent); border-color: var(--accent); }
+  .dia.sel span, .dia.sel b { color: #fff; }
+  .dia.sel em { background: rgba(255,255,255,.22); color: #fff; }
+  .dia.hoy:not(.sel) b { color: var(--accent); }
+
+  .resumen { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 0 12px; }
+  .resumen h2 { margin: 0; font-size: 18px; }
+  .resumen p { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+  .cita { display: grid; grid-template-columns: 82px 1fr auto; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .cita.pasada { opacity: .55; border-left-color: #c9bdb3; }
+  .cita.nueva { animation: destello 3.2s ease-out; }
+  @keyframes destello {
+    0%   { background: #fff3c4; box-shadow: 0 0 0 4px rgba(180, 87, 59, .35); transform: scale(1.012); }
+    60%  { background: #fff3c4; box-shadow: 0 0 0 4px rgba(180, 87, 59, .18); transform: none; }
+    100% { background: var(--surface); box-shadow: none; }
+  }
+  .hora { font-variant-numeric: tabular-nums; }
+  .hora b { font-size: 17px; display: block; line-height: 1.2; }
+  .hora span { font-size: 12.5px; color: var(--muted); }
+  .info b { display: block; font-size: 15.5px; }
+  .info .serv { font-size: 14px; }
+  .info .det { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .info a { color: var(--accent-dark); text-decoration: none; font-weight: 500; }
+  .info a:hover { text-decoration: underline; }
+  .cancelar { background: transparent; border: 1.5px solid var(--line); color: var(--danger); border-radius: 8px; padding: 7px 12px; font-size: 13px; }
+  .cancelar:hover { border-color: var(--danger); background: #fdecea; }
+  .vacio-dia { text-align: center; color: var(--muted); padding: 44px 16px; background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; }
+  .error { background: #fdecea; color: var(--danger); border-radius: 12px; padding: 16px; margin-top: 18px; }
+
+  .modal { position: fixed; inset: 0; background: rgba(43, 35, 32, .45); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+  .modal.abierto { display: flex; }
+  .caja { background: var(--surface); border-radius: 16px; padding: 22px; width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; }
+  .caja h3 { margin: 0 0 14px; font-size: 18px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 4px; }
+  input, select { width: 100%; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 15px; font-family: inherit; background: #fff; color: var(--ink); }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pie { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  .msg-form { color: var(--danger); font-size: 13.5px; margin-top: 12px; min-height: 18px; }
+
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 14px; opacity: 0; transition: all .25s; pointer-events: none; z-index: 60; }
+  .toast.ver { opacity: 1; transform: translateX(-50%); }
+
+  @media (max-width: 520px) {
+    .cita { grid-template-columns: 1fr auto; }
+    .hora { grid-column: 1 / -1; display: flex; gap: 8px; align-items: baseline; }
+    .dia b { font-size: 16px; }
+    .btn { padding: 9px 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="top">
+      <h1>Agenda <small id="negocio"></small></h1>
+      <div class="acciones">
+        <button class="btn sec" id="btnHoy">Hoy</button>
+        <button class="btn" id="btnNueva">+ Nueva cita</button>
+      </div>
+    </div>
+    <div class="semana-nav">
+      <button class="flecha" id="prev" aria-label="Semana anterior">‹</button>
+      <span id="etiquetaSemana"></span>
+      <button class="flecha" id="next" aria-label="Semana siguiente">›</button>
+    </div>
+    <div class="dias" id="dias"></div>
+  </header>
+
+  <div class="resumen"><h2 id="tituloDia"></h2><p id="resumenDia"></p></div>
+  <div id="lista"></div>
+</div>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+  <form class="caja" id="formNueva">
+    <h3 id="modalTitulo">Nueva cita</h3>
+    <label for="fServicio">Servicio</label>
+    <select id="fServicio" required></select>
+    <div class="fila">
+      <div><label for="fFecha">Día</label><input type="date" id="fFecha" required></div>
+      <div><label for="fHora">Hora</label><select id="fHora" required></select></div>
+    </div>
+    <label for="fNombre">Nombre del cliente</label>
+    <input id="fNombre" required maxlength="80" autocomplete="off">
+    <label for="fTel">Teléfono</label>
+    <input id="fTel" required inputmode="tel" maxlength="20" autocomplete="off">
+    <div class="msg-form" id="msgForm"></div>
+    <div class="pie">
+      <button type="button" class="btn sec" id="cerrarModal">Cancelar</button>
+      <button type="submit" class="btn" id="guardar">Guardar cita</button>
+    </div>
+  </form>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  // ---------- utilidades ----------
+  const clave = new URLSearchParams(location.search).get('clave');
+  const negocioSlug = new URLSearchParams(location.search).get('n');   // qué peluquería (vacío = la de ejemplo)
+  const pad = n => String(n).padStart(2, '0');
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const lunesDe = d => addDays(d, -((d.getDay() + 6) % 7));
+  const DIAS_CORTO = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  const DIAS_LARGO = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const $ = id => document.getElementById(id);
+
+  // Crea elementos sin usar innerHTML: los nombres de clientes nunca se interpretan como código
+  function el(tag, clase, texto) {
+    const e = document.createElement(tag);
+    if (clase) e.className = clase;
+    if (texto !== undefined) e.textContent = texto;
+    return e;
+  }
+
+  async function api(ruta, opciones = {}) {
+    const url = new URL(ruta, location.origin);
+    if (clave) url.searchParams.set('clave', clave);
+    if (negocioSlug) url.searchParams.set('n', negocioSlug);
+    const cabeceras = {};
+    const metodo = opciones.method || 'GET';
+    if (metodo !== 'GET') {
+      cabeceras['X-Panel'] = '1';
+      if (opciones.body) cabeceras['Content-Type'] = 'application/json';
+    }
+    const r = await fetch(url, { ...opciones, headers: cabeceras, cache: 'no-store' });
+    const datos = await r.json().catch(() => ({}));
+    return { ok: r.ok, status: r.status, datos };
+  }
+
+  function aviso(texto) {
+    const t = $('toast');
+    t.textContent = texto;
+    t.classList.add('ver');
+    clearTimeout(aviso.id);
+    aviso.id = setTimeout(() => t.classList.remove('ver'), 2600);
+  }
+
+  // ---------- estado ----------
+  // Modo demo (?demo=1): lo usa la pantalla dividida. Carga todas las citas y salta al día de la cita nueva.
+  const modoDemo = new URLSearchParams(location.search).has('demo');
+  let seleccionado = iso(new Date());
+  let citas = [];
+  let servicios = [];
+  let ultimaSemana = null;        // para saber si lo que llega es nuevo o solo un cambio de semana
+  let idsVistos = new Set();
+  let nuevasIds = new Set();
+
+  async function cargarSemana() {
+    const lunes = lunesDe(parse(seleccionado));
+    const ruta = modoDemo ? '/api/citas' : `/api/citas?desde=${iso(lunes)}&hasta=${iso(addDays(lunes, 6))}`;
+    const r = await api(ruta);
+    if (r.status === 403) { mostrarError('No autorizado. Si has publicado la web, abre el panel con /panel?clave=TU_CLAVE.'); return; }
+    if (!r.ok) { mostrarError('No se han podido cargar las citas.'); return; }
+    citas = r.datos;
+
+    // ¿Ha entrado alguna cita nueva desde la última carga? (por ejemplo, reservada en el chat)
+    const claveCarga = modoDemo ? 'todas' : iso(lunes);
+    nuevasIds = new Set();
+    if (ultimaSemana === claveCarga) {
+      const nuevas = citas.filter(c => !idsVistos.has(c.id));
+      if (nuevas.length) {
+        nuevasIds = new Set(nuevas.map(c => c.id));
+        const ultima = nuevas[nuevas.length - 1];
+        if (modoDemo) seleccionado = ultima.fecha;
+        aviso(`Nueva cita: ${ultima.nombre} · ${ultima.inicio.slice(11, 16)}`);
+        setTimeout(() => { nuevasIds = new Set(); }, 6000);
+      }
+    }
+    if (modoDemo && ultimaSemana === null && citas.length) {
+      // Al abrir la pantalla de demo, ir directo al próximo día con citas (no dejar la agenda de hoy vacía)
+      const hoy = iso(new Date());
+      seleccionado = (citas.find(c => c.fecha >= hoy) || citas[citas.length - 1]).fecha;
+    }
+    ultimaSemana = claveCarga;
+    idsVistos = new Set(citas.map(c => c.id));
+    pintar();
+  }
+
+  function mostrarError(texto) {
+    $('lista').replaceChildren(el('div', 'error', texto));
+    $('dias').replaceChildren();
+  }
+
+  // ---------- pintado ----------
+  function pintar() {
+    const sel = parse(seleccionado);
+    const lunes = lunesDe(sel);
+    const hoy = iso(new Date());
+
+    const dom = addDays(lunes, 6);
+    $('etiquetaSemana').textContent = lunes.getMonth() === dom.getMonth()
+      ? `${lunes.getDate()} – ${dom.getDate()} de ${MESES[dom.getMonth()]}`
+      : `${lunes.getDate()} ${MESES[lunes.getMonth()].slice(0, 3)} – ${dom.getDate()} ${MESES[dom.getMonth()].slice(0, 3)}`;
+
+    const dias = $('dias');
+    dias.replaceChildren();
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(lunes, i), f = iso(d);
+      const n = citas.filter(c => c.fecha === f).length;
+      const b = el('button', 'dia' + (f === seleccionado ? ' sel' : '') + (f === hoy ? ' hoy' : ''));
+      b.append(el('span', '', DIAS_CORTO[i]), el('b', '', String(d.getDate())), el('em', n ? '' : 'vacio', n ? String(n) : '·'));
+      b.addEventListener('click', () => { seleccionado = f; pintar(); });
+      dias.append(b);
+    }
+
+    const titulo = `${DIAS_LARGO[sel.getDay()]} ${sel.getDate()} de ${MESES[sel.getMonth()]}`;
+    $('tituloDia').textContent = titulo.charAt(0).toUpperCase() + titulo.slice(1) + (seleccionado === hoy ? ' · hoy' : '');
+    const delDia = citas.filter(c => c.fecha === seleccionado).sort((a, b) => a.inicio.localeCompare(b.inicio));
+    const total = delDia.reduce((s, c) => s + (typeof c.precio === 'number' ? c.precio : 0), 0);
+    $('resumenDia').textContent = delDia.length
+      ? `${delDia.length} cita${delDia.length === 1 ? '' : 's'}${total ? ` · ${total} € previstos` : ''}`
+      : '';
+
+    const lista = $('lista');
+    lista.replaceChildren();
+    if (!delDia.length) {
+      lista.append(el('div', 'vacio-dia', 'No hay citas este día.'));
+      return;
+    }
+    const ahora = new Date();
+    for (const c of delDia) {
+      const card = el('div', 'cita' + (new Date(c.fin) < ahora ? ' pasada' : '') + (nuevasIds.has(c.id) ? ' nueva' : ''));
+      const hora = el('div', 'hora');
+      hora.append(el('b', '', c.inicio.slice(11, 16)), el('span', '', `hasta ${c.fin.slice(11, 16)}`));
+
+      const info = el('div', 'info');
+      const tel = el('a', '', c.telefono);
+      tel.href = 'tel:' + String(c.telefono).replace(/\D/g, '');
+      const det = el('div', 'det');
+      det.append(tel, document.createTextNode(`${typeof c.precio === 'number' ? ` · ${c.precio} €` : ''} · código ${c.id}`));
+      info.append(el('b', '', c.nombre), el('div', 'serv', c.servicio), det);
+
+      const cancelar = el('button', 'cancelar', 'Cancelar');
+      cancelar.addEventListener('click', () => cancelarCita(c));
+      card.append(hora, info, cancelar);
+      lista.append(card);
+    }
+  }
+
+  async function cancelarCita(c) {
+    if (!confirm(`¿Cancelar la cita de ${c.nombre} (${c.servicio}, ${c.inicio.slice(11, 16)})?\nEsta acción no se puede deshacer.`)) return;
+    const r = await api('/api/citas/' + encodeURIComponent(c.id), { method: 'DELETE' });
+    aviso(r.ok ? 'Cita cancelada' : (r.datos.error || 'No se ha podido cancelar'));
+    cargarSemana();
+  }
+
+  // ---------- nueva cita ----------
+  async function cargarServicios() {
+    const r = await api('/api/admin/servicios');
+    if (!r.ok) return;
+    servicios = r.datos;
+    const sel = $('fServicio');
+    sel.replaceChildren();
+    for (const s of servicios) {
+      const o = el('option', '', `${s.nombre} (${s.duracion_min} min)`);
+      o.value = s.id;
+      sel.append(o);
+    }
+  }
+
+  async function cargarHuecos() {
+    const fecha = $('fFecha').value, servicio = $('fServicio').value;
+    const hora = $('fHora');
+    hora.replaceChildren();
+    if (!fecha || !servicio) return;
+    const r = await api(`/api/admin/huecos?fecha=${encodeURIComponent(fecha)}&servicio=${encodeURIComponent(servicio)}`);
+    const huecos = r.ok ? (r.datos.huecos || []) : [];
+    if (!huecos.length) {
+      const o = el('option', '', r.ok && r.datos.nota ? r.datos.nota : 'Sin huecos ese día');
+      o.value = '';
+      hora.append(o);
+      return;
+    }
+    for (const h of huecos) { const o = el('option', '', h); o.value = h; hora.append(o); }
+  }
+
+  function abrirModal() {
+    $('formNueva').reset();
+    $('fFecha').value = seleccionado;
+    $('msgForm').textContent = '';
+    $('modal').classList.add('abierto');
+    cargarHuecos();
+    $('fNombre').focus();
+  }
+  const cerrarModal = () => $('modal').classList.remove('abierto');
+
+  $('formNueva').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!$('fHora').value) { $('msgForm').textContent = 'Elige una hora con hueco libre.'; return; }
+    $('guardar').disabled = true;
+    const r = await api('/api/admin/citas', {
+      method: 'POST',
+      body: JSON.stringify({
+        fecha: $('fFecha').value, hora: $('fHora').value, servicio: $('fServicio').value,
+        nombre: $('fNombre').value, telefono: $('fTel').value,
+      }),
+    });
+    $('guardar').disabled = false;
+    if (!r.ok) { $('msgForm').textContent = r.datos.error || 'No se ha podido guardar.'; cargarHuecos(); return; }
+    cerrarModal();
+    if (r.datos.cita) idsVistos.add(r.datos.cita.id);   // la has creado tú: no hace falta avisarte de que es nueva
+    seleccionado = $('fFecha').value;
+    aviso('Cita guardada');
+    cargarSemana();
+  });
+
+  // ---------- eventos ----------
+  $('btnHoy').addEventListener('click', () => { seleccionado = iso(new Date()); cargarSemana(); });
+  $('prev').addEventListener('click', () => { seleccionado = iso(addDays(parse(seleccionado), -7)); cargarSemana(); });
+  $('next').addEventListener('click', () => { seleccionado = iso(addDays(parse(seleccionado), 7)); cargarSemana(); });
+  $('btnNueva').addEventListener('click', abrirModal);
+  $('cerrarModal').addEventListener('click', cerrarModal);
+  $('modal').addEventListener('click', e => { if (e.target === $('modal')) cerrarModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+  $('fFecha').addEventListener('change', cargarHuecos);
+  $('fServicio').addEventListener('change', cargarHuecos);
+
+  // Se actualiza sola cada 30 segundos (por si entra una reserva desde el chat)
+  setInterval(() => {
+    if (document.visibilityState === 'visible' && !$('modal').classList.contains('abierto')) cargarSemana();
+  }, 30000);
+
+  fetch('/api/negocio' + (negocioSlug ? '?n=' + encodeURIComponent(negocioSlug) : '')).then(r => r.json()).then(n => { $('negocio').textContent = n.nombre || ''; }).catch(() => {});
+  cargarServicios();
+  cargarSemana();
+</script>
+</body>
+</html>
